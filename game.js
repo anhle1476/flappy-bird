@@ -1,7 +1,14 @@
-/* jshint esversion: 6 */
 // Select CVS
 const cvs = document.getElementById("game-canvas");
 const ctx = cvs.getContext("2d");
+
+let viewRatio = window.innerHeight / cvs.height;
+
+document.addEventListener(
+  "resize",
+  () => (viewRatio = window.innerHeight / cvs.height)
+);
+
 // game var
 let frames = 0;
 let pause = false;
@@ -14,7 +21,7 @@ const state = {
   game: 2,
   pause: 3,
   over: 4,
-  score: 5
+  score: 5,
 };
 
 // set sprite
@@ -46,7 +53,7 @@ const bg = {
   x: 0,
   y: cvs.height - 204,
 
-  draw: function() {
+  draw: function () {
     ctx.drawImage(
       sprite,
       this.sX,
@@ -58,7 +65,7 @@ const bg = {
       this.w,
       this.h
     );
-  }
+  },
 };
 // FOREGROUND
 const fg = {
@@ -70,7 +77,7 @@ const fg = {
   y: cvs.height - 110,
   dx: 2,
 
-  draw: function() {
+  draw: function () {
     // draw fg 2 times
     ctx.drawImage(
       sprite,
@@ -95,12 +102,12 @@ const fg = {
       this.h
     );
   },
-  update: function() {
+  update: function () {
     // move fg 's x by w -> return
     if (state.current == state.game) {
       this.x = (this.x - this.dx) % this.w;
     }
-  }
+  },
 };
 // BIRD
 const bird = {
@@ -108,7 +115,7 @@ const bird = {
     { sX: 528, sY: 128 },
     { sX: 528, sY: 180 },
     { sX: 528, sY: 220 },
-    { sX: 528, sY: 128 }
+    { sX: 528, sY: 128 },
   ],
   w: 34,
   h: 24,
@@ -124,7 +131,7 @@ const bird = {
     2: 4,
     3: 0,
     4: 0,
-    5: 0
+    5: 0,
   },
   // control bird's movements
   speed: 0,
@@ -132,7 +139,7 @@ const bird = {
   jump: 5.2,
   // control bird's rotation
   rotation: 0,
-  draw: function() {
+  draw: function () {
     // rotate canvas -> draw bird -> restore canvas
     ctx.save();
     ctx.translate(this.x, this.y);
@@ -150,7 +157,7 @@ const bird = {
     );
     ctx.restore();
   },
-  update: function() {
+  update: function () {
     // make bird flapping animation
     if (frames % this.period[state.current] == 0) {
       this.frames = (this.frames + 1) % 4;
@@ -220,26 +227,26 @@ const bird = {
         break;
     }
   },
-  flap: function() {
+  flap: function () {
     // bird fly up when click
     this.speed = -this.jump;
     this.rotation = -25;
     // flap sfx
     sfxFlap.currentTime = 0;
     sfxFlap.play();
-  }
+  },
 };
 // PIPES
 const pipes = {
   // top pipe source position
   top: {
     sX: 604,
-    sY: 0
+    sY: 0,
   },
   // bottom pipe source position
   bot: {
     sX: 660,
-    sY: 0
+    sY: 0,
   },
   w: 52,
   h: 270,
@@ -249,13 +256,13 @@ const pipes = {
   position: [
     {
       pX: 288,
-      pY: -100
-    }
+      pY: -100,
+    },
   ],
   // pipe movement
   dX: 2,
-  draw: function() {
-    this.position.map(pipe => {
+  draw: function () {
+    this.position.map((pipe) => {
       // top pipe
       ctx.drawImage(
         sprite,
@@ -282,17 +289,17 @@ const pipes = {
       );
     });
   },
-  update: function() {
+  update: function () {
     if (state.current == state.game) {
       // loop pipes 's storage
-      this.position.map(pipe => {
+      this.position.map((pipe) => {
         // pipe move
         pipe.pX -= this.dX;
         // when pipe's X == 130 -> add new pipe
         if (pipe.pX == 130) {
           this.position.push({
             pX: 288,
-            pY: Math.floor(Math.random() * -200)
+            pY: Math.floor(Math.random() * -200),
           });
         }
       });
@@ -302,20 +309,20 @@ const pipes = {
       }
     }
   },
-  reset: function() {
+  reset: function () {
     this.position = [
       {
         pX: 288,
-        pY: -100
-      }
+        pY: -100,
+      },
     ];
-  }
+  },
 };
 // SCORE
 const score = {
   value: 0,
   best: parseInt(localStorage.getItem("flappy-bird-best")) || 0,
-  draw: function() {
+  draw: function () {
     ctx.fillStyle = "#f0f5e5";
     ctx.strokeStyle = "#513948";
 
@@ -346,7 +353,7 @@ const score = {
         ctx.strokeText(this.best, 237, 250);
         break;
     }
-  }
+  },
 };
 // MEDAL
 let medal = {
@@ -354,206 +361,84 @@ let medal = {
     iron: 524,
     bronze: 572,
     silver: 619,
-    gold: 666
+    gold: 666,
   },
   sY: 281,
   w: 44,
   h: 44,
   draw() {
-    if (state.current == state.over || state.current == state.score) {
-      // get current medal from best
-      let sXBest;
-      if (score.best >= 100) {
-        sXBest = this.sX.gold;
-      } else if (score.best >= 50) {
-        sXBest = this.sX.silver;
-      } else if (score.best >= 20) {
-        sXBest = this.sX.bronze;
-      } else if (score.best >= 10) {
-        sXBest = this.sX.iron;
-      }
-      // draw medal
-      if (sXBest != undefined) {
-        ctx.drawImage(
-          sprite,
-          sXBest,
-          this.sY,
-          this.w,
-          this.h,
-          57,
-          229,
-          this.w,
-          this.h
-        );
-      }
+    if (state.current !== state.over && state.current !== state.score) return;
+    // get current medal from best
+    let sXBest;
+    if (score.best >= 100) {
+      sXBest = this.sX.gold;
+    } else if (score.best >= 50) {
+      sXBest = this.sX.silver;
+    } else if (score.best >= 20) {
+      sXBest = this.sX.bronze;
+    } else if (score.best >= 10) {
+      sXBest = this.sX.iron;
     }
-  }
-};
-// MENU (flappy bird title)
-const menu = {
-  sX: 0,
-  sY: 0,
-  w: 190,
-  h: 44,
-  x: 49,
-  y: 120,
-  draw: function() {
-    if (state.current == state.menu || state.current == state.score) {
+    // draw medal
+    if (sXBest != undefined) {
       ctx.drawImage(
         sprite,
-        this.sX,
+        sXBest,
         this.sY,
         this.w,
         this.h,
-        this.x,
-        this.y,
+        57,
+        229,
         this.w,
         this.h
       );
     }
-  }
-};
-// MENU BTN
-const menuBtn = {
-  sX: 291,
-  sY: 380,
-  w: 171,
-  h: 28,
-  x: 59,
-  y: 300,
-  draw: function() {
-    if (state.current == state.menu) {
-      ctx.drawImage(
-        sprite,
-        this.sX,
-        this.sY,
-        this.w,
-        this.h,
-        this.x,
-        this.y,
-        this.w,
-        this.h
-      );
-    }
-  }
-};
-// PLAY & PAUSE BUTTON
-const playPause = {
-  sX: {
-    play: 291,
-    pause: 324
   },
-  sY: 413,
-  w: 26,
-  h: 28,
-  x: 10,
-  y: 10,
-  draw: function() {
-    // playing -> draw pause btn
-    if (state.current == state.game) {
-      ctx.drawImage(
-        sprite,
-        this.sX.pause,
-        this.sY,
-        this.w,
-        this.h,
-        this.x,
-        this.y,
-        this.w,
-        this.h
-      );
-    }
-    // pause -> draw play btn
-    if (state.current == state.pause) {
-      ctx.drawImage(
-        sprite,
-        this.sX.play,
-        this.sY,
-        this.w,
-        this.h,
-        this.x,
-        this.y,
-        this.w,
-        this.h
-      );
-    }
-  }
 };
-// MENU's SCORE BOARD
-const scoreBoard = {
-  sX: 485,
-  sY: 336,
-  w: 226,
-  h: 155,
-  x: 31,
-  y: 187,
-  draw: function() {
-    if (state.current == state.score) {
-      ctx.drawImage(
-        sprite,
-        this.sX,
-        this.sY,
-        this.w,
-        this.h,
-        this.x,
-        this.y,
-        this.w,
-        this.h
-      );
-    }
+
+class Component {
+  constructor(sX, sY, width, height, x, y, ...drawStates) {
+    this.sX = sX;
+    this.sY = sY;
+    this.width = width;
+    this.height = height;
+    this.x = x;
+    this.y = y;
+    this.drawStates = drawStates;
+    console.log(drawStates);
   }
-};
-// READY MESSAGE
-const ready = {
-  sX: 57,
-  sY: 84,
-  w: 174,
-  h: 160,
-  x: 57,
-  y: 135,
-  draw: function() {
-    if (state.current == state.ready) {
-      ctx.drawImage(
-        sprite,
-        this.sX,
-        this.sY,
-        this.w,
-        this.h,
-        this.x,
-        this.y,
-        this.w,
-        this.h
-      );
-    }
+
+  draw() {
+    if (
+      this.drawStates.length &&
+      !this.drawStates.some((sts) => sts === state.current)
+    )
+      return;
+    ctx.drawImage(
+      sprite,
+      this.sX,
+      this.sY,
+      this.width,
+      this.height,
+      this.x,
+      this.y,
+      this.width,
+      this.height
+    );
   }
-};
-// GAME OVER
-const gameOver = {
-  sX: 293,
-  sY: 114,
-  w: 226,
-  h: 212,
-  x: 31,
-  y: 135,
-  draw: function() {
-    if (state.current == state.over) {
-      ctx.drawImage(
-        sprite,
-        this.sX,
-        this.sY,
-        this.w,
-        this.h,
-        this.x,
-        this.y,
-        this.w,
-        this.h
-      );
-    }
-  }
-};
-// MAIN CONTROL
+}
+
+const logo = new Component(0, 0, 190, 44, 49, 120, state.menu, state.score);
+const menuBtn = new Component(291, 380, 171, 28, 59, 300, state.menu);
+const playBtn = new Component(292, 413, 26, 28, 10, 10, state.game);
+const pauseBtn = new Component(324, 413, 26, 28, 10, 10, state.pause);
+const scoreBoard = new Component(485, 336, 226, 155, 31, 187, state.score);
+const readyMessage = new Component(57, 84, 174, 160, 57, 135, state.ready);
+const gameOver = new Component(293, 114, 226, 212, 31, 135, state.over);
+
 let game = {
-  draw: function() {
+  draw: function () {
+    ctx.clearRect(0, 0, 288, 512);
     ctx.fillStyle = "#73b7c4";
     ctx.fillRect(0, 0, 288, 512);
     // draw elements
@@ -561,21 +446,22 @@ let game = {
     pipes.draw();
     fg.draw();
     bird.draw();
-    playPause.draw();
-    ready.draw();
+    playBtn.draw();
+    pauseBtn.draw();
+    readyMessage.draw();
     gameOver.draw();
-    menu.draw();
+    logo.draw();
     menuBtn.draw();
     scoreBoard.draw();
     score.draw();
     medal.draw();
   },
-  update: function() {
+  update: function () {
     // update elements
     fg.update();
     pipes.update();
     bird.update();
-  }
+  },
 };
 // GAME LOOP
 function loop() {
@@ -587,8 +473,74 @@ function loop() {
   }
 }
 loop();
+
+// BUTTON CLICK HANLDER
+const btnClickHandler = {
+  _isBtnClicked: function (clickX, clickY, left, right, top, bottom) {
+    return (
+      clickX >= left * viewRatio &&
+      clickX <= right * viewRatio &&
+      clickY >= top * viewRatio &&
+      clickY <= bottom * viewRatio
+    );
+  },
+  start: function (clickX, clickY) {
+    if (this._isBtnClicked(clickX, clickY, 59.7, 138.8, 301, 325)) {
+      state.current = state.ready;
+      bird.y = 200;
+      pipes.reset();
+      score.value = 0;
+      sfxSwooshing.play();
+    }
+  },
+  score: function (clickX, clickY) {
+    if (this._isBtnClicked(clickX, clickY, 149.7, 228.8, 300, 327)) {
+      state.current = state.score;
+      sfxSwooshing.play();
+    }
+  },
+  closeScore: function (clickX, clickY) {
+    if (this._isBtnClicked(clickX, clickY, 103.1, 183.1, 314, 341)) {
+      state.current = state.menu;
+      sfxSwooshing.play();
+    }
+  },
+  pause: function (clickX, clickY) {
+    if (this._isBtnClicked(clickX, clickY, 9.7, 34.8, 10, 37)) {
+      state.current = state.pause;
+      sfxSwooshing.play();
+    } else {
+      bird.flap();
+    }
+  },
+  resume: function (clickX, clickY) {
+    if (this._isBtnClicked(clickX, clickY, 9.7, 34.8, 10, 37)) {
+      state.current = state.game;
+      sfxSwooshing.play();
+      loop();
+    }
+  },
+  gameOverToReady: function (clickX, clickY) {
+    if (this._isBtnClicked(clickX, clickY, 57, 136, 316, 342)) {
+      state.current = state.ready;
+      this._gameOverReset();
+    }
+  },
+  gameOverToMenu: function (clickX, clickY) {
+    if (this._isBtnClicked(clickX, clickY, 148, 228, 316, 342)) {
+      state.current = state.menu;
+      this._gameOverReset();
+    }
+  },
+  _gameOverReset: function () {
+    sfxSwooshing.play();
+    bird.y = 200;
+    pipes.reset();
+    score.value = 0;
+  },
+};
 // GAME EVENT LISTENER
-cvs.addEventListener("click", e => {
+cvs.addEventListener("click", (e) => {
   // get click location
   let bd = cvs.getBoundingClientRect();
   let clickX = e.x - bd.x;
@@ -597,24 +549,8 @@ cvs.addEventListener("click", e => {
   switch (state.current) {
     // MENU STATE
     case state.menu:
-      // start btn
-      if (clickX >= 59.7 && clickX <= 138.8 && clickY >= 301 && clickY <= 325) {
-        state.current = state.ready;
-        bird.y = 200;
-        pipes.reset();
-        score.value = 0;
-        sfxSwooshing.play();
-      }
-      // score btn
-      if (
-        clickX >= 149.7 &&
-        clickX <= 228.8 &&
-        clickY >= 300 &&
-        clickY <= 327
-      ) {
-        state.current = state.score;
-        sfxSwooshing.play();
-      }
+      btnClickHandler.start(clickX, clickY);
+      btnClickHandler.score(clickX, clickY);
       break;
     // READY STATE
     case state.ready:
@@ -623,48 +559,19 @@ cvs.addEventListener("click", e => {
       break;
     // SCORE BOARD STATE
     case state.score:
-      if (
-        clickX >= 103.1 &&
-        clickX <= 183.1 &&
-        clickY >= 314 &&
-        clickY <= 341
-      ) {
-        state.current = state.menu;
-        sfxSwooshing.play();
-      }
+      btnClickHandler.closeScore(clickX, clickY);
       break;
     // GAME PLAYING STATE
     case state.game:
-      if (clickX >= 9.7 && clickX <= 34.8 && clickY >= 10 && clickY <= 37) {
-        state.current = state.pause;
-        sfxSwooshing.play();
-      } else {
-        bird.flap();
-      }
+      btnClickHandler.pause(clickX, clickY);
       break;
     // GAME PAUSE STATE
     case state.pause:
-      if (clickX >= 9.7 && clickX <= 34.8 && clickY >= 10 && clickY <= 37) {
-        state.current = state.game;
-        sfxSwooshing.play();
-        loop();
-      }
+      btnClickHandler.resume(clickX, clickY);
       break;
     // GAME OVER STATE
     case state.over:
-      if (clickX >= 57 && clickX <= 136 && clickY >= 316 && clickY <= 342) {
-        state.current = state.ready;
-        sfxSwooshing.play();
-        bird.y = 200;
-        pipes.reset();
-        score.value = 0;
-      }
-      if (clickX >= 148 && clickX <= 228 && clickY >= 316 && clickY <= 342) {
-        state.current = state.menu;
-        sfxSwooshing.play();
-        bird.y = 200;
-        pipes.reset();
-        score.value = 0;
-      }
+      btnClickHandler.gameOverToReady(clickX, clickY);
+      btnClickHandler.gameOverToMenu(clickX, clickY);
   }
 });

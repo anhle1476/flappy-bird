@@ -2,12 +2,11 @@
 const cvs = document.getElementById("game-canvas");
 const ctx = cvs.getContext("2d");
 
-let viewRatio = window.innerHeight / cvs.height;
-
-document.addEventListener(
-  "resize",
-  () => (viewRatio = window.innerHeight / cvs.height)
+const isMobile = /Android|webOS|iPhone|iPad|Mac|Macintosh|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+  navigator.userAgent
 );
+
+let viewRatio = (isMobile ? window.screen.height : window.innerHeight) / 512;
 
 // game var
 let frames = 0;
@@ -405,7 +404,6 @@ class Component {
     this.x = x;
     this.y = y;
     this.drawStates = drawStates;
-    console.log(drawStates);
   }
 
   draw() {
@@ -485,7 +483,7 @@ const btnClickHandler = {
     );
   },
   start: function (clickX, clickY) {
-    if (this._isBtnClicked(clickX, clickY, 59.7, 138.8, 301, 325)) {
+    if (this._isBtnClicked(clickX, clickY, 59.7, 138.8, 285, 327)) {
       state.current = state.ready;
       bird.y = 200;
       pipes.reset();
@@ -494,19 +492,19 @@ const btnClickHandler = {
     }
   },
   score: function (clickX, clickY) {
-    if (this._isBtnClicked(clickX, clickY, 149.7, 228.8, 300, 327)) {
+    if (this._isBtnClicked(clickX, clickY, 149.7, 228.8, 285, 327)) {
       state.current = state.score;
       sfxSwooshing.play();
     }
   },
   closeScore: function (clickX, clickY) {
-    if (this._isBtnClicked(clickX, clickY, 103.1, 183.1, 314, 341)) {
+    if (this._isBtnClicked(clickX, clickY, 103.1, 183.1, 300, 341)) {
       state.current = state.menu;
       sfxSwooshing.play();
     }
   },
   pause: function (clickX, clickY) {
-    if (this._isBtnClicked(clickX, clickY, 9.7, 34.8, 10, 37)) {
+    if (this._isBtnClicked(clickX, clickY, 9.7, 34.8, 5, 37)) {
       state.current = state.pause;
       sfxSwooshing.play();
     } else {
@@ -514,20 +512,20 @@ const btnClickHandler = {
     }
   },
   resume: function (clickX, clickY) {
-    if (this._isBtnClicked(clickX, clickY, 9.7, 34.8, 10, 37)) {
+    if (this._isBtnClicked(clickX, clickY, 9.7, 34.8, 5, 37)) {
       state.current = state.game;
       sfxSwooshing.play();
       loop();
     }
   },
   gameOverToReady: function (clickX, clickY) {
-    if (this._isBtnClicked(clickX, clickY, 57, 136, 316, 342)) {
+    if (this._isBtnClicked(clickX, clickY, 57, 136, 300, 345)) {
       state.current = state.ready;
       this._gameOverReset();
     }
   },
   gameOverToMenu: function (clickX, clickY) {
-    if (this._isBtnClicked(clickX, clickY, 148, 228, 316, 342)) {
+    if (this._isBtnClicked(clickX, clickY, 148, 228, 300, 345)) {
       state.current = state.menu;
       this._gameOverReset();
     }
@@ -539,18 +537,19 @@ const btnClickHandler = {
     score.value = 0;
   },
 };
-// GAME EVENT LISTENER
-cvs.addEventListener("click", (e) => {
+
+function handleGameEvents(clientX, clientY) {
   // get click location
   let bd = cvs.getBoundingClientRect();
-  let clickX = e.x - bd.x;
-  let clickY = e.y - bd.y;
+  let clickX = clientX - bd.x;
+  let clickY = clientY - bd.y;
+
   // current state -> action
   switch (state.current) {
     // MENU STATE
     case state.menu:
-      btnClickHandler.start(clickX, clickY);
       btnClickHandler.score(clickX, clickY);
+      btnClickHandler.start(clickX, clickY);
       break;
     // READY STATE
     case state.ready:
@@ -574,4 +573,9 @@ cvs.addEventListener("click", (e) => {
       btnClickHandler.gameOverToReady(clickX, clickY);
       btnClickHandler.gameOverToMenu(clickX, clickY);
   }
+}
+
+// GAME EVENT LISTENER
+cvs.addEventListener("mousedown", (e) => {
+  handleGameEvents(e.clientX, e.clientY);
 });
